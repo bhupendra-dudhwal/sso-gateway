@@ -3,12 +3,12 @@ package services
 import (
 	"net/http"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/constants"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/models"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports/ingress"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/ingress/response"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/utils"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/models"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports/ingress"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/ingress/response"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/utils"
 	"github.com/valyala/fasthttp"
 )
 

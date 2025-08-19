@@ -1,7 +1,7 @@
 package ports
 
 import (
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/models"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/models"
 	"github.com/valyala/fasthttp"
 )
 

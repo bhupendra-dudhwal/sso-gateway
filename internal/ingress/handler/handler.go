@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports/ingress"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports/ingress"
 	"github.com/fasthttp/router"
 )
 

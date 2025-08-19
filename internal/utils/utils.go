@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/constants"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
 	"github.com/valyala/fasthttp"
 )
 

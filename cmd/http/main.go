@@ -10,7 +10,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/builder"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/builder"
 	"go.uber.org/zap"
 )
 

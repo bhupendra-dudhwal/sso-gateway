@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/constants"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/models"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/models"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )

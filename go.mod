@@ -1,4 +1,4 @@
-module github.com/bhupendra-dudhwal/go-hexagonal
+module github.com/bhupendra-dudhwal/sso-gateway
 
 go 1.24.6
 

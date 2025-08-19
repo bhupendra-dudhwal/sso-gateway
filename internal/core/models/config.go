@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/constants"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
 	validation "github.com/go-ozzo/ozzo-validation/v4"
 )
 

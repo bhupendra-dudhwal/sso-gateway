@@ -7,9 +7,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/constants"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/models"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/utils"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/models"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/utils"
 	"github.com/redis/go-redis/v9"
 )
 

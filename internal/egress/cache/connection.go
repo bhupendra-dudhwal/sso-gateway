@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/models"
-	"github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports"
-	egressPorts "github.com/bhupendra-dudhwal/go-hexagonal/internal/core/ports/egress"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/models"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports"
+	egressPorts "github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports/egress"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 )
