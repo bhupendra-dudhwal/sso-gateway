@@ -1,0 +1,38 @@
+app:
+  server:
+    compression: true
+    environment: development
+    port: 8080
+
+logger:
+  level: info
+  
+database:
+  debug: true
+  name: tyroo-central
+  host: localhost
+  username: admin
+  password: password
+  port: 5432   
+  timezone: Asia/Kolkata
+  sslmode: disable
+  maxIdleConns: 100
+  maxOpenConns: 500
+  connMaxLife: 2m
+  connMaxIdle: 1m
+  connectRetries: 3
+  retryInterval: 10s
+
+cache:
+  name: 1
+  host: localhost
+  # username: admin
+  password: password
+  port: 6379
+  poolSize: 20
+  minIdleConns: 5
+  dialTimeout: 5s
+  readTimeout: 3s
+  writeTimeout: 3s
+  connectRetries: 3
+  retryInterval: 10s
