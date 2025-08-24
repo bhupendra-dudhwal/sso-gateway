@@ -46,6 +46,10 @@ func NewLogger(cfg *models.Logger, env constants.Environment) ports.Logger {
 	return &zapLogger{logger: logger}
 }
 
+func (l *zapLogger) With(fields ...zap.Field) ports.Logger {
+	return &zapLogger{logger: l.logger.With(fields...)}
+}
+
 func (l *zapLogger) Info(msg string, fields ...zap.Field) {
 	l.logger.Info(msg, fields...)
 }

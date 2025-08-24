@@ -43,6 +43,16 @@ func (r *response) SetStatus(status bool) ports.Response {
 	return r
 }
 
+func (r *response) SetToken(token string) ports.Response {
+	r.payload.Token = token
+	return r
+}
+
+func (r *response) SetPermission(permissions []string) ports.Response {
+	r.payload.Permissions = permissions
+	return r
+}
+
 func (r *response) SetPayload(payload any) ports.Response {
 	r.payload.Payload = payload
 	return r

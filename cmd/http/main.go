@@ -23,8 +23,6 @@ func main() {
 		NewAppBuilder(ctx).
 		SetConfig().
 		SetLogger().
-		SetDatabase().
-		SetCache().
 		SetServices().
 		SetHandler().
 		Build()

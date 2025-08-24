@@ -10,6 +10,8 @@ type Response interface {
 	SetStatus(status bool) Response
 	SetMessage(msg string) Response
 	SetPayload(payload any) Response
+	SetToken(token string) Response
+	SetPermission(permissions []string) Response
 	SetErrorCode(code string) Response
 	SetErrorMessage(msg string) Response
 	SetErrorDetails(details any) Response

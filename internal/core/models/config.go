@@ -8,10 +8,12 @@ import (
 )
 
 type Config struct {
-	App      *App      `yaml:"app"`
-	Logger   *Logger   `yaml:"logger"`
-	Database *Database `yaml:"database"`
-	Cache    *Cache    `yaml:"cache"`
+	App        *App        `yaml:"app"`
+	Logger     *Logger     `yaml:"logger"`
+	Database   *Database   `yaml:"database"`
+	Cache      *Cache      `yaml:"cache"`
+	Jwt        *Jwt        `yaml:"jwt"`
+	HttpClient *HttpClient `yaml:"httpClient"`
 }
 
 func (c Config) Validate() error {
@@ -20,16 +22,75 @@ func (c Config) Validate() error {
 		validation.Field(&c.Logger, validation.Required, validation.NotNil),
 		validation.Field(&c.Database, validation.Required, validation.NotNil),
 		validation.Field(&c.Cache, validation.Required, validation.NotNil),
+		validation.Field(&c.Jwt, validation.Required, validation.NotNil),
+		validation.Field(&c.HttpClient, validation.Required, validation.NotNil),
+	)
+}
+
+type Jwt struct {
+	SecretKey string        `yaml:"secretKey"`
+	Issuer    string        `yaml:"issuer"`
+	Subject   string        `yaml:"subject"`
+	Audience  []string      `yaml:"audience"`
+	LifeSpan  time.Duration `yaml:"lifeSpan"`
+}
+
+func (j Jwt) Validate() error {
+	return validation.ValidateStruct(&j,
+		validation.Field(&j.Audience, validation.Required, validation.NotNil),
+		validation.Field(&j.LifeSpan, validation.Required),
+	)
+}
+
+type HttpClient struct {
+	Timeout           time.Duration `yaml:"timeout"`
+	ClientTLSRequired bool          `yaml:"clientTLSRequired"`
+	CertPath          string        `yaml:""`
+}
+
+func (h HttpClient) HttpClient() error {
+	return validation.ValidateStruct(&h,
+		validation.Field(&h.Timeout, validation.Required),
+		validation.Field(&h.ClientTLSRequired, validation.When(h.ClientTLSRequired, validation.Required)),
 	)
 }
 
 type App struct {
+	Login  *Login  `yaml:"login"`
 	Server *Server `yaml:"server"`
 }
 
 func (a App) Validate() error {
 	return validation.ValidateStruct(&a,
 		validation.Field(&a.Server, validation.Required, validation.NotNil),
+	)
+}
+
+type Login struct {
+	MaxFailedAttempts      int           `yaml:"maxFailedAttempts"`
+	LockoutWindowMinutes   time.Duration `yaml:"lockoutWindowMinutes"`
+	LockoutDurationMinutes time.Duration `yaml:"lockoutDurationMinutes"`
+	Otp                    *AuthOtp      `yaml:"otp"`
+}
+
+func (a Login) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.MaxFailedAttempts, validation.Required, validation.Min(1)),
+		validation.Field(&a.LockoutWindowMinutes, validation.Required),
+		validation.Field(&a.LockoutDurationMinutes, validation.Required),
+		validation.Field(&a.Otp, validation.Required, validation.NotNil),
+	)
+}
+
+type AuthOtp struct {
+	Length                    int `yaml:"length"`
+	WaitSecondsBeforeOtpRetry int `yaml:"waitSecondsBeforeOtpRetry"`
+}
+
+func (a AuthOtp) Validate() error {
+	return validation.ValidateStruct(&a,
+		validation.Field(&a.Length, validation.Required, validation.Min(6)),
+		validation.Field(&a.WaitSecondsBeforeOtpRetry, validation.Required, validation.Min(30)),
 	)
 }
 
