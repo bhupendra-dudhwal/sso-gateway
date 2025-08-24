@@ -5,4 +5,5 @@ type Repository struct {
 	Role         RoleRepositoryPorts
 	User         UserRepositoryPorts
 	LoginHistory LoginHistoryPorts
+	Permission   PermissionRepositoryPorts
 }

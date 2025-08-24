@@ -127,6 +127,8 @@ func (a *appBuilder) SetDatabaseRepositories() *appBuilder {
 	a.egressRepository.Role = databaseRepository.NewRoleRepository(client)
 	a.egressRepository.User = databaseRepository.NewUserRepository(client)
 	a.egressRepository.LoginHistory = databaseRepository.NewloginHistoryRepository(client)
+	a.egressRepository.Permission = databaseRepository.NewPermissionRepository(client)
+
 	return a
 }
 
@@ -137,8 +139,8 @@ func (a *appBuilder) SetServices() *appBuilder {
 		a.config, a.repository.Logger, a.egressRepository.User, a.egressRepository.Role, a.ingressRepository.Token,
 		a.egressRepository.LoginHistory,
 	)
-	a.ingressRepository.Role = services.NewRoleService(a.config, a.repository.Logger, a.egressRepository.Role)
-	a.ingressRepository.Permission = services.NewPermissionService(a.config, a.repository.Logger)
+	a.ingressRepository.Role = services.NewRoleService(a.config, a.repository.Logger, a.egressRepository)
+	a.ingressRepository.Permission = services.NewPermissionService(a.config, a.repository.Logger, a.egressRepository)
 	a.ingressRepository.User = services.NewUserService(a.config, a.repository.Logger)
 
 	return a

@@ -33,7 +33,34 @@ func (r *role) GetByID(ctx context.Context, id constants.Roles) (*models.Role, e
 	var role models.Role
 	err := r.client.WithContext(ctx).First(&role, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, utils.ErrDocumentNotFound
 	}
 	return &role, err
+}
+
+func (r *role) GetByIDs(ctx context.Context, ids []constants.Roles) ([]models.Role, error) {
+	var role []models.Role
+	err := r.client.WithContext(ctx).Where("id IN(?)", ids).Find(&role).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, utils.ErrDocumentNotFound
+	}
+	return role, err
+}
+
+func (r *role) DeleteByID(ctx context.Context, id constants.Roles) error {
+	var role models.Role
+	err := r.client.WithContext(ctx).Delete(&role, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return utils.ErrDocumentNotFound
+	}
+	return err
+}
+
+func (r *role) GetRolesWithoutPagination(ctx context.Context) ([]models.Role, error) {
+	var role []models.Role
+	err := r.client.WithContext(ctx).Find(&role).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, utils.ErrDocumentNotFound
+	}
+	return nil, err
 }
