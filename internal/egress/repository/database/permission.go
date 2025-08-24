@@ -45,3 +45,21 @@ func (r *permission) GetByIDs(ctx context.Context, ids []string) ([]ingressModel
 	}
 	return permission, err
 }
+
+func (r *permission) GetPermissionWithoutPagination(ctx context.Context) ([]ingressModel.Permission, error) {
+	var permission []ingressModel.Permission
+	err := r.client.WithContext(ctx).Find(&permission).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, utils.ErrDocumentNotFound
+	}
+	return permission, err
+}
+
+func (r *permission) DeleteByID(ctx context.Context, id string) error {
+	var permission ingressModel.Permission
+	err := r.client.WithContext(ctx).Delete(&permission, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return utils.ErrDocumentNotFound
+	}
+	return err
+}

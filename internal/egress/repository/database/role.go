@@ -62,5 +62,5 @@ func (r *role) GetRolesWithoutPagination(ctx context.Context) ([]models.Role, er
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, utils.ErrDocumentNotFound
 	}
-	return nil, err
+	return role, err
 }
