@@ -56,3 +56,8 @@ const (
 	Create Operations = "create"
 	Update Operations = "update"
 )
+
+const (
+	Authorization string = "Authorization"
+	AuthType      string = "Bearer "
+)
