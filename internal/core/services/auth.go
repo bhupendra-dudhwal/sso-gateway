@@ -23,42 +23,40 @@ import (
 type authService struct {
 	errCodePrefix     string
 	config            *models.Config
-	logger            ports.Logger
-	roleRepository    egress.RoleRepositoryPorts
-	tokenServicePorts ingress.TokenServicePorts
-	userRepository    egress.UserRepositoryPorts
-	loginHistoryPorts egress.LoginHistoryPorts
+	repository        ports.Repository
+	egressRepository  egress.Repository
+	ingressRepository ingress.Repository
 }
 
 func NewAuthService(
 	config *models.Config,
-	logger ports.Logger,
-	userRepository egress.UserRepositoryPorts,
-	roleRepository egress.RoleRepositoryPorts,
-	tokenServicePorts ingress.TokenServicePorts,
-	loginHistoryPorts egress.LoginHistoryPorts,
+	repository ports.Repository,
+	egressRepository egress.Repository,
+	ingressRepository ingress.Repository,
 ) ingress.AuthServicePorts {
 	return &authService{
 		errCodePrefix:     "AH-%s-%d",
 		config:            config,
-		logger:            logger,
-		userRepository:    userRepository,
-		roleRepository:    roleRepository,
-		tokenServicePorts: tokenServicePorts,
-		loginHistoryPorts: loginHistoryPorts,
+		repository:        repository,
+		ingressRepository: ingressRepository,
+		egressRepository:  egressRepository,
 	}
 }
 
+// Required service
+// 1. Token Service
+// 2. Role Repository
 func (a *authService) Session(ctx *fasthttp.RequestCtx) {
 	reqID := utils.GetField(ctx, constants.CtxRequestID)
-	logger := a.logger.With(zap.String("requestID", reqID))
+	logger := a.repository.Logger.With(zap.String("requestID", reqID))
 
 	response := response.NewResponse(reqID, a.config.App.Server.Compression, logger)
 
 	ctxVal, cancel := withTimeout(ctx, time.Duration(1*time.Minute))
 	defer cancel()
 
-	role, err := a.roleRepository.GetByID(ctxVal, constants.RoleSessionUser)
+	fmt.Printf("\n\n a.egressRepository.Role - %+v\n\n", a.egressRepository.Role)
+	role, err := a.egressRepository.Role.GetByID(ctxVal, constants.RoleSessionUser)
 	if err != nil {
 		if errors.Is(err, utils.ErrDocumentNotFound) {
 			logger.Warn("Session role not found", zap.String("role", constants.RoleSessionUser.String()))
@@ -91,7 +89,7 @@ func (a *authService) Session(ctx *fasthttp.RequestCtx) {
 		return
 	}
 
-	token, err := a.tokenServicePorts.GenerateToken(role.ID, role.Permissions, nil)
+	token, err := a.ingressRepository.Token.GenerateToken(role.ID, role.Permissions, nil)
 	if err != nil {
 		logger.Error("Token generation failed", zap.Error(err))
 		response.SetError(&models.Error{
@@ -109,7 +107,7 @@ func (a *authService) Session(ctx *fasthttp.RequestCtx) {
 
 func (a *authService) Signin(ctx *fasthttp.RequestCtx) {
 	reqID := utils.GetField(ctx, constants.CtxRequestID)
-	logger := a.logger.With(zap.String("requestID", reqID))
+	logger := a.repository.Logger.With(zap.String("requestID", reqID))
 
 	response := response.NewResponse(reqID, a.config.App.Server.Compression, logger)
 	var loginPayload = models.LoginRequest{}
@@ -138,7 +136,7 @@ func (a *authService) Signin(ctx *fasthttp.RequestCtx) {
 	ctxVal, cancel := withTimeout(ctx, time.Duration(1*time.Minute))
 	defer cancel()
 
-	user, err := a.userRepository.GetByEmail(ctxVal, loginPayload.Email)
+	user, err := a.egressRepository.User.GetByEmail(ctxVal, loginPayload.Email)
 	if err != nil {
 		if errors.Is(err, utils.ErrDocumentNotFound) {
 			logger.Warn("invalid credentials", zap.String("email", loginPayload.Email))
@@ -195,7 +193,7 @@ func (a *authService) Signin(ctx *fasthttp.RequestCtx) {
 	}
 
 	// create a token
-	token, err := a.tokenServicePorts.GenerateToken(user.Role, user.Permissions, user)
+	token, err := a.ingressRepository.Token.GenerateToken(user.Role, user.Permissions, user)
 	if err != nil {
 		response.SetError(&models.Error{
 			Code:    fmt.Sprintf(a.errCodePrefix, "SIN", 8),
@@ -211,7 +209,7 @@ func (a *authService) Signin(ctx *fasthttp.RequestCtx) {
 	}(user, fail)
 
 	go func(user *models.User) {
-		a.loginHistoryPorts.Add(context.Background(), &models.LoginHistory{
+		a.egressRepository.LoginHistory.Add(context.Background(), &models.LoginHistory{
 			UserID:     user.ID,
 			Status:     constants.StatusSuccess,
 			Token:      token,
@@ -245,7 +243,7 @@ func isValidPassword(hashedPassword, inputPassword string) error {
 
 func (a *authService) handleFailCounts(ctx context.Context, user *models.User, failCount int) {
 	if failCount >= a.config.App.Login.MaxFailedAttempts {
-		a.userRepository.LockByID(ctx, user.ID, time.Now().Add(a.config.App.Login.LockoutDurationMinutes))
+		a.egressRepository.User.LockByID(ctx, user.ID, time.Now().Add(a.config.App.Login.LockoutDurationMinutes))
 	}
 }
 
@@ -254,7 +252,7 @@ func (a *authService) countRecentFailures(ctx context.Context, userID int) int {
 	defer cancel()
 
 	before := time.Now().Add(-a.config.App.Login.LockoutDurationMinutes)
-	history, _ := a.loginHistoryPorts.GetByIDAndLoginAt(ctx, userID, before)
+	history, _ := a.egressRepository.LoginHistory.GetByIDAndLoginAt(ctx, userID, before)
 	fail := 0
 	for _, login := range history {
 		if login.Status == constants.StatusSuccess {

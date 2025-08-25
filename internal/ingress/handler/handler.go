@@ -1,19 +1,39 @@
 package handler
 
 import (
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/constants"
 	"github.com/bhupendra-dudhwal/sso-gateway/internal/core/ports/ingress"
 	"github.com/fasthttp/router"
+	"github.com/valyala/fasthttp"
 )
 
+// middlewareFunc type for fasthttp middleware functions
+type middlewareFunc func(fasthttp.RequestHandler) fasthttp.RequestHandler
+
 type handler struct {
-	route *router.Router
+	route           *router.Router
+	middlewarePorts ingress.MiddlewarePorts
 }
 
-func NewHandler() (*router.Router, ingress.HandlerPorts) {
+// ChainMiddleware applies multiple middlewares to a handler
+func chainMiddleware(base fasthttp.RequestHandler, middlewares ...middlewareFunc) fasthttp.RequestHandler {
+	for i := len(middlewares) - 1; i >= 0; i-- {
+		base = middlewares[i](base)
+	}
+	return base
+}
+
+func NewHandler(middlewarePorts ingress.MiddlewarePorts) (fasthttp.RequestHandler, ingress.HandlerPorts) {
 	r := router.New()
 
-	return r, &handler{
-		route: r,
+	newHandler := chainMiddleware(r.Handler,
+		middlewarePorts.RequestID,
+		middlewarePorts.PanicRecover,
+	)
+
+	return newHandler, &handler{
+		route:           r,
+		middlewarePorts: middlewarePorts,
 	}
 }
 
@@ -24,41 +44,35 @@ func (h *handler) SetHealthHandler(healthService ingress.HealthServicePorts) {
 }
 
 func (h *handler) SetAuthHandler(authService ingress.AuthServicePorts) {
-	api := h.route.Group("/api/v1")
-	userGroup := api.Group("/auth")
-	userGroup.POST("/signin", authService.Signin)
-	userGroup.POST("/signup", authService.Signin)
-	userGroup.POST("/otp", authService.Otp)
-	userGroup.POST("/otp/Verify", authService.Verify)
-	userGroup.POST("/session", authService.Session)
+	userGroup := h.route.Group("/api/v1/auth")
+	userGroup.GET("/session", authService.Session)
+	userGroup.POST("/signin", h.middlewarePorts.Authorization(constants.PrmSignin)(authService.Signin))
+	userGroup.POST("/signup", h.middlewarePorts.Authorization(constants.PrmSignup)(authService.Signin))
 }
 
 func (h *handler) SetUserHandler(userService ingress.UserServicePorts) {
-	api := h.route.Group("/api/v1")
-	userGroup := api.Group("/users")
-	userGroup.GET("", userService.List)           // List
-	userGroup.GET("/{id}", userService.Info)      // Info
-	userGroup.POST("", userService.Add)           // Add
-	userGroup.PUT("/{id}", userService.Update)    // Update
-	userGroup.DELETE("/{id}", userService.Delete) // Delete
+	userGroup := h.route.Group("/api/v1/users")
+	userGroup.GET("/", h.middlewarePorts.Authorization(constants.PrmListUser)(userService.List))            // List
+	userGroup.GET("/{id}", h.middlewarePorts.Authorization(constants.PrmInfoUser)(userService.Info))        // Info
+	userGroup.POST("/", h.middlewarePorts.Authorization(constants.PrmAdduser)(userService.Add))             // Add
+	userGroup.PUT("/{id}", h.middlewarePorts.Authorization(constants.PrmEditUser)(userService.Update))      // Update
+	userGroup.DELETE("/{id}", h.middlewarePorts.Authorization(constants.PrmDeleteUser)(userService.Delete)) // Delete
 }
 
 func (h *handler) SetRoleHandler(roleService ingress.RoleServicePorts) {
-	api := h.route.Group("/api/v1")
-	roleGroup := api.Group("/roles")
-	roleGroup.GET("", roleService.List)           // List
-	roleGroup.GET("/{id}", roleService.Info)      // Info
-	roleGroup.POST("", roleService.Add)           // Add
-	roleGroup.PUT("/{id}", roleService.Update)    // Update
-	roleGroup.DELETE("/{id}", roleService.Delete) // Delete
+	roleGroup := h.route.Group("/api/v1/roles")
+	roleGroup.GET("/", h.middlewarePorts.Authorization(constants.PrmListRoles)(roleService.List))            // List
+	roleGroup.GET("/{id}", h.middlewarePorts.Authorization(constants.PrmInfoRole)(roleService.Info))         // Info
+	roleGroup.POST("/", h.middlewarePorts.Authorization(constants.PrmAddRoles)(roleService.Add))             // Add
+	roleGroup.PUT("/{id}", h.middlewarePorts.Authorization(constants.PrmEditRoles)(roleService.Update))      // Update
+	roleGroup.DELETE("/{id}", h.middlewarePorts.Authorization(constants.PrmDeleteRoles)(roleService.Delete)) // Delete
 }
 
 func (h *handler) SetPermissionHandler(permissionsService ingress.PermissionServicePorts) {
-	api := h.route.Group("/api/v1")
-	permissionGroup := api.Group("/permissions")
-	permissionGroup.GET("", permissionsService.List)           // List
-	permissionGroup.GET("/{id}", permissionsService.Info)      // Info
-	permissionGroup.POST("", permissionsService.Add)           // Add
-	permissionGroup.PUT("/{id}", permissionsService.Update)    // Update
-	permissionGroup.DELETE("/{id}", permissionsService.Delete) // Delete
+	permissionGroup := h.route.Group("/api/v1/permissions")
+	permissionGroup.GET("/", h.middlewarePorts.Authorization(constants.PrmListPermissions)(permissionsService.List))            // List
+	permissionGroup.GET("/{id}", h.middlewarePorts.Authorization(constants.PrmInfoPermission)(permissionsService.Info))         // Info
+	permissionGroup.POST("/", h.middlewarePorts.Authorization(constants.PrmAddPermissions)(permissionsService.Add))             // Add
+	permissionGroup.PUT("/{id}", h.middlewarePorts.Authorization(constants.PrmEditPermissions)(permissionsService.Update))      // Update
+	permissionGroup.DELETE("/{id}", h.middlewarePorts.Authorization(constants.PrmDeletePermissions)(permissionsService.Delete)) // Delete
 }

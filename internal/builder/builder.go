@@ -15,9 +15,9 @@ import (
 	"github.com/bhupendra-dudhwal/sso-gateway/internal/egress/database"
 	databaseRepository "github.com/bhupendra-dudhwal/sso-gateway/internal/egress/repository/database"
 	"github.com/bhupendra-dudhwal/sso-gateway/internal/ingress/handler"
+	"github.com/bhupendra-dudhwal/sso-gateway/internal/ingress/middleware"
 	"github.com/bhupendra-dudhwal/sso-gateway/internal/utils"
 	"github.com/bhupendra-dudhwal/sso-gateway/pkg/logger"
-	"github.com/fasthttp/router"
 	"github.com/redis/go-redis/v9"
 	"github.com/valyala/fasthttp"
 	"go.uber.org/zap"
@@ -39,7 +39,7 @@ type appBuilder struct {
 
 	// httpClient egress.HttpClientPorts
 
-	handler *router.Router
+	handler fasthttp.RequestHandler
 	server  *fasthttp.Server
 
 	// repositories
@@ -135,10 +135,7 @@ func (a *appBuilder) SetDatabaseRepositories() *appBuilder {
 func (a *appBuilder) SetServices() *appBuilder {
 	a.ingressRepository.Health = services.NewHealthService(a.config, a.repository.Logger)
 	a.ingressRepository.Token = services.NewTokenService(a.config, a.repository.Logger)
-	a.ingressRepository.Auth = services.NewAuthService(
-		a.config, a.repository.Logger, a.egressRepository.User, a.egressRepository.Role, a.ingressRepository.Token,
-		a.egressRepository.LoginHistory,
-	)
+	a.ingressRepository.Auth = services.NewAuthService(a.config, a.repository, a.egressRepository, a.ingressRepository)
 	a.ingressRepository.Role = services.NewRoleService(a.config, a.repository.Logger, a.egressRepository)
 	a.ingressRepository.Permission = services.NewPermissionService(a.config, a.repository.Logger, a.egressRepository)
 	a.ingressRepository.User = services.NewUserService(a.config, a.repository.Logger)
@@ -147,13 +144,14 @@ func (a *appBuilder) SetServices() *appBuilder {
 }
 
 func (a *appBuilder) SetHandler() *appBuilder {
-	routes, handlerObj := handler.NewHandler()
+	middlewarePorts := middleware.NewMiddleWare(a.config, a.repository.Logger, a.ingressRepository.Token)
+	routes, handlerObj := handler.NewHandler(middlewarePorts)
 
 	handlerObj.SetHealthHandler(a.ingressRepository.Health)
+	handlerObj.SetAuthHandler(a.ingressRepository.Auth)
 	handlerObj.SetRoleHandler(a.ingressRepository.Role)
 	handlerObj.SetPermissionHandler(a.ingressRepository.Permission)
 	handlerObj.SetUserHandler(a.ingressRepository.User)
-
 	a.handler = routes
 
 	return a
@@ -171,6 +169,6 @@ func (a *appBuilder) SetHttpClient() *appBuilder {
 }
 
 func (a *appBuilder) Build() (ports.Logger, *fasthttp.Server, int) {
-	a.server.Handler = a.handler.Handler
+	a.server.Handler = a.handler
 	return a.repository.Logger, a.server, a.config.App.Server.Port
 }

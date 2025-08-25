@@ -45,7 +45,7 @@ func (j Jwt) Validate() error {
 type HttpClient struct {
 	Timeout           time.Duration `yaml:"timeout"`
 	ClientTLSRequired bool          `yaml:"clientTLSRequired"`
-	CertPath          string        `yaml:""`
+	CertPath          string        `yaml:"certPath"`
 }
 
 func (h HttpClient) HttpClient() error {

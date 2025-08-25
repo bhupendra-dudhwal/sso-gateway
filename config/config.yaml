@@ -36,3 +36,15 @@ cache:
   writeTimeout: 3s
   connectRetries: 3
   retryInterval: 10s
+
+jwt:
+  secretKey: jk
+  issuer: bhupendra
+  subject: test
+  audience: ["sso","auth"]
+  lifeSpan: 1h
+
+httpClient:
+  timeout: 30m
+  clientTLSRequired: false
+  certPath: 

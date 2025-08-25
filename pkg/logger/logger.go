@@ -35,7 +35,7 @@ func NewLogger(cfg *models.Logger, env constants.Environment) ports.Logger {
 
 	logger, err := zapCfg.Build(
 		zap.AddCaller(),
-		zap.AddStacktrace(zapcore.ErrorLevel),
+		// zap.AddStacktrace(zapcore.ErrorLevel),
 		zap.AddCallerSkip(1),
 	)
 	if err != nil {

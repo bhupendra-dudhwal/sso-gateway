@@ -23,6 +23,7 @@ func main() {
 		NewAppBuilder(ctx).
 		SetConfig().
 		SetLogger().
+		SetDatabaseRepositories().
 		SetServices().
 		SetHandler().
 		Build()

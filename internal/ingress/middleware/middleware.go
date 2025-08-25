@@ -1,8 +1,6 @@
 package middleware
 
 import (
-	"context"
-	"net/http"
 	"runtime/debug"
 	"strings"
 
@@ -23,7 +21,7 @@ type middleware struct {
 	tokenService ingress.TokenServicePorts
 }
 
-func NewMiddleWare(config *models.Config, logger ports.Logger, tokenService ingress.TokenServicePorts) *middleware {
+func NewMiddleWare(config *models.Config, logger ports.Logger, tokenService ingress.TokenServicePorts) ingress.MiddlewarePorts {
 	return &middleware{
 		config:       config,
 		logger:       logger,
@@ -31,20 +29,15 @@ func NewMiddleWare(config *models.Config, logger ports.Logger, tokenService ingr
 	}
 }
 
-func (m *middleware) RequestID(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Generate a new UUID for this request
-		reqID := uuid.NewString()
-
-		// Add the request ID to the context
-		ctx := context.WithValue(r.Context(), constants.CtxRequestID, reqID)
-
-		// Add it to the response headers
-		w.Header().Set("X-Request-ID", reqID)
-
-		// Pass the new context to the request and call the next handler
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+func (m *middleware) RequestID(next fasthttp.RequestHandler) fasthttp.RequestHandler {
+	return func(ctx *fasthttp.RequestCtx) {
+		if ctx.UserValue(constants.CtxRequestID) == nil {
+			reqID := uuid.NewString()
+			ctx.SetUserValue(constants.CtxRequestID, reqID)
+			ctx.Response.Header.Set("X-Request-ID", reqID)
+		}
+		next(ctx)
+	}
 }
 
 // Authorization returns a fasthttp middleware for auth + permission check
@@ -86,7 +79,6 @@ func (m *middleware) Authorization(requiredPermission string) func(next fasthttp
 	}
 }
 
-// PanicRecover recovers from panics and logs the error
 // PanicRecover handles panics and responds with a standard error message
 func (m *middleware) PanicRecover(next fasthttp.RequestHandler) fasthttp.RequestHandler {
 	return func(ctx *fasthttp.RequestCtx) {
